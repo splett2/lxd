@@ -10,6 +10,7 @@ import (
 	"github.com/lxc/lxd/lxd/state"
 	log "github.com/lxc/lxd/shared/log15"
 	"github.com/lxc/lxd/shared/logger"
+	"github.com/farjump/go-libudev"
 )
 
 // USBEvent represents the properties of a USB device uevent.
@@ -56,6 +57,33 @@ func usbUnregisterHandler(instance Instance, deviceName string) {
 func USBRunHandlers(state *state.State, event *USBEvent) {
 	usbMutex.Lock()
 	defer usbMutex.Unlock()
+
+	fmt.Printf("running in USBHandler\n")
+	// Create Udev and Enumerate
+	u := Udev{}
+	e := u.NewEnumerate()
+
+	// Add some FilterAddMatchSubsystemDevtype
+	e.AddMatchSubsystem("block")
+	e.AddMatchIsInitialized()
+	devices, _ := e.Devices()
+	for i := range devices {
+	    device := devices[i]
+	    fmt.Println(device.Syspath())
+	}
+
+	u2 := Udev{}
+	e2 := u2.NewEnumerate()
+
+	// Add some FilterAddMatchSubsystemDevtype
+	e2.AddMatchSubsystem("char")
+	e2.AddMatchIsInitialized()
+	devices2, _ := e2.Devices()
+	for i := range devices2 {
+	    device := devices2[i]
+	    fmt.Println(device2.Syspath())
+	}
+
 
 	for key, hook := range usbHandlers {
 		keyParts := strings.SplitN(key, "\000", 3)
