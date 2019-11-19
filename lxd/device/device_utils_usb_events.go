@@ -60,7 +60,7 @@ func USBRunHandlers(state *state.State, event *USBEvent) {
 
 	fmt.Printf("running in USBHandler\n")
 	// Create Udev and Enumerate
-	u := Udev{}
+	u := udev.Udev{}
 	e := u.NewEnumerate()
 
 	// Add some FilterAddMatchSubsystemDevtype
@@ -72,7 +72,7 @@ func USBRunHandlers(state *state.State, event *USBEvent) {
 	    fmt.Println(device.Syspath())
 	}
 
-	u2 := Udev{}
+	u2 := udev.Udev{}
 	e2 := u2.NewEnumerate()
 
 	// Add some FilterAddMatchSubsystemDevtype
@@ -81,7 +81,7 @@ func USBRunHandlers(state *state.State, event *USBEvent) {
 	devices2, _ := e2.Devices()
 	for i := range devices2 {
 	    device := devices2[i]
-	    fmt.Println(device2.Syspath())
+	    fmt.Println(device.Syspath())
 	}
 
 
