@@ -63,8 +63,9 @@ func USBRunHandlers(state *state.State, event *USBEvent) {
 	u := udev.Udev{}
 	e := u.NewEnumerate()
 
+	fmt.Printf("searching for vendor ID\n")
 	// Add some FilterAddMatchSubsystemDevtype
-	e.AddMatchSubsystem("block")
+	e.AddMatchProperty("VENDOR_ID", "8633")
 	e.AddMatchIsInitialized()
 	devices, _ := e.Devices()
 	for i := range devices {
@@ -76,13 +77,16 @@ func USBRunHandlers(state *state.State, event *USBEvent) {
 	e2 := u2.NewEnumerate()
 
 	// Add some FilterAddMatchSubsystemDevtype
-	e2.AddMatchSubsystem("char")
+	fmt.Printf("searching for model ID\n")
+	e2.AddMatchProperty("MODEL_ID", "800a")
 	e2.AddMatchIsInitialized()
 	devices2, _ := e2.Devices()
 	for i := range devices2 {
 	    device := devices2[i]
 	    fmt.Println(device.Syspath())
 	}
+
+	fmt.Printf("done searching\n")
 
 
 	for key, hook := range usbHandlers {
