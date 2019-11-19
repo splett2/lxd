@@ -65,7 +65,7 @@ func USBRunHandlers(state *state.State, event *USBEvent) {
 
 	fmt.Printf("searching for vendor ID\n")
 	// Add some FilterAddMatchSubsystemDevtype
-	e.AddMatchProperty("VENDOR_ID", "8633")
+	e.AddMatchProperty("ID_VENDOR_ID", "8633")
 	e.AddMatchIsInitialized()
 	devices, _ := e.Devices()
 	for i := range devices {
@@ -78,7 +78,7 @@ func USBRunHandlers(state *state.State, event *USBEvent) {
 
 	// Add some FilterAddMatchSubsystemDevtype
 	fmt.Printf("searching for model ID\n")
-	e2.AddMatchProperty("MODEL_ID", "800a")
+	e2.AddMatchProperty("ID_MODEL_ID", "800a")
 	e2.AddMatchIsInitialized()
 	devices2, _ := e2.Devices()
 	for i := range devices2 {
