@@ -72,6 +72,7 @@ func USBRunHandlers(state *state.State, event *USBEvent) {
 	    device := devices[i]
 	    fmt.Println(device.Syspath())
 	    fmt.Println(device.Devpath())
+	    fmt.Println(device.Devnode())
 	}
 
 	u2 := udev.Udev{}
@@ -86,6 +87,7 @@ func USBRunHandlers(state *state.State, event *USBEvent) {
 	    device := devices2[i]
 	    fmt.Println(device.Syspath())
 	    fmt.Println(device.Devpath())
+	    fmt.Println(device.Devnode())
 	}
 
 	fmt.Printf("done searching\n")
