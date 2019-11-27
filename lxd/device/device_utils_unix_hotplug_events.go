@@ -19,12 +19,12 @@ type UnixHotplugEvent struct {
 	Vendor  string
 	Product string
 
-	Path        string //TODO make sure this is correct
-	Major       uint32 //TODO do we need this?
-	Minor       uint32 //TODO do we need this?
+	Path        string
+	Major       uint32
+	Minor       uint32
 	Subsystem   string
-	UeventParts []string //TODO do we need this?
-	UeventLen   int      //TODO do we need this?
+	UeventParts []string
+	UeventLen   int
 }
 
 // unixHotplugHandlers stores the event handler callbacks for Unix hotplug events.
@@ -105,20 +105,11 @@ func UnixHotplugNewEvent(action string, vendor string, product string, major str
 		return UnixHotplugEvent{}, err
 	}
 
-	path := devname
-	if devname == "" {
-		// path = fmt.Sprintf("/dev/bus/usb/%03d/%03d", busnumInt, devnumInt) //TODO how do we get the correct path?
-	} else {
-		if !filepath.IsAbs(devname) {
-			path = fmt.Sprintf("/dev/%s", devname)
-		}
-	}
-
 	return UnixHotplugEvent{
 		action,
 		vendor,
 		product,
-		path,
+		devname,
 		uint32(majorInt),
 		uint32(minorInt),
 		subsystem,
