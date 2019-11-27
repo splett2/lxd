@@ -10,6 +10,7 @@ import (
 	"github.com/lxc/lxd/lxd/state"
 	log "github.com/lxc/lxd/shared/log15"
 	"github.com/lxc/lxd/shared/logger"
+	"github.com/farjump/go-libudev"
 )
 
 // USBEvent represents the properties of a USB device uevent.
@@ -72,6 +73,8 @@ func USBRunHandlers(state *state.State, event *USBEvent) {
 	    fmt.Println(device.Syspath())
 	    fmt.Println(device.Devpath())
 	    fmt.Println(device.Devnode())
+	    fmt.Println(device.SysattrValue("MAJOR"))
+	    fmt.Println(device.SysattrValue("MINOR"))
 	}
 
 	u2 := udev.Udev{}

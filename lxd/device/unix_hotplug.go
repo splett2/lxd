@@ -112,6 +112,7 @@ func (d *unixHotplug) Register() error {
 
 // Start is run when the device is added to the instance
 func (d *unixHotplug) Start() (*RunConfig, error) {
+	err := nil
 	runConf := RunConfig{}
 	runConf.PostHooks = []func() error{d.Register}
 
@@ -131,7 +132,7 @@ func (d *unixHotplug) Start() (*RunConfig, error) {
 	device := devices.Front()
 	if device != nil {
 		fmt.Printf("found dev with\n vendorid: %s\n, productid: %s\n, subsystem: %s\n, devnode: %s\n, major: %s\n, minor: %s\n", d.config["vendorid"], d.config["productid"], device.Subsystem(), device.Devnode(), device.SysattrValue("MAJOR"), device.SysattrValue("MINOR"))
-	} 
+	}
 	if d.isRequired() && device == nil {
 		return nil, fmt.Errorf("Required Unix Hotplug device not found")
 	}
@@ -140,24 +141,29 @@ func (d *unixHotplug) Start() (*RunConfig, error) {
 		fmt.Printf("device not found with vendorid: %s, productid: %s\n", d.config["vendorid"], d.config["productid"])
 		return &runConf, nil
 	}
+	if device.Subsystem() != "block" && device.Subsystem() != "char" {
+
+		if d.isRequired(){
+			return nil, fmt.Errorf("Required Unix Hotplug device not found, found device but has unsupported subsystem")
+		} else {
+			fmt.Printf("Device found has unsupported subsystem with vendorid: %s, productid: %s\n", d.config["vendorid"], d.config["productid"])
+			return &runConf, nil
+		}
+	}
 
 	// TODO now setup device
 	// TODO figure out if Devnode is the path that we want or not
 	if device.Subsystem() == "char" {
 		err := unixDeviceSetupCharNum(d.state, d.instance.DevicesPath(), "unix", d.name, d.config, device.SysattrValue("MAJOR"), device.SysattrValue("MINOR"), device.Devnode(), false, &runConf)
 	} else if device.Subsystem() == "block" {
-		err := unixDeviceSetupCharNum(d.state, d.instance.DevicesPath(), "unix", d.name, d.config, device.SysattrValue("MAJOR"), device.SysattrValue("MINOR"), device.Devnode(), false, &runConf)
-	} else {
-		fmt.Printf("device not found with vendorid: %s, productid: %s\n", d.config["vendorid"], d.config["productid"])
-		return &runConf, nil
+		err := unixDeviceSetupBlockNum(d.state, d.instance.DevicesPath(), "unix", d.name, d.config, device.SysattrValue("MAJOR"), device.SysattrValue("MINOR"), device.Devnode(), false, &runConf)
 	}
-	//TODO err := unixDeviceSetupBlockNum(d.state, d.instance.DevicesPath(), "unix", d.name, d.config, device.SysattrValue("MAJOR"), device.SysattrValue("MINOR"), device.Devnode(), false, &runConf)
-
+	
 	if err != nil {
 		return nil, err
 	}
 
-
+	fmt.Printf("finished Start() for hotplug device\n")
 
 	return &runConf, nil
 }
