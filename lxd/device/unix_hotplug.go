@@ -165,9 +165,9 @@ func (d *unixHotplug) Start() (*RunConfig, error) {
 	// TODO now setup device
 	// TODO figure out if Devnode is the path that we want or not
 	if device.Subsystem() == "char" {
-		err := unixDeviceSetupCharNum(d.state, d.instance.DevicesPath(), "unix", d.name, d.config, major, minor, device.Devnode(), false, &runConf)
+		err = unixDeviceSetupCharNum(d.state, d.instance.DevicesPath(), "unix", d.name, d.config, major, minor, device.Devnode(), false, &runConf)
 	} else if device.Subsystem() == "block" {
-		err := unixDeviceSetupBlockNum(d.state, d.instance.DevicesPath(), "unix", d.name, d.config, major, minor, device.Devnode(), false, &runConf)
+		err = unixDeviceSetupBlockNum(d.state, d.instance.DevicesPath(), "unix", d.name, d.config, major, minor, device.Devnode(), false, &runConf)
 	}
 	
 	if err != nil {
