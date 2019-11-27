@@ -10,7 +10,6 @@ import (
 	"github.com/lxc/lxd/lxd/state"
 	log "github.com/lxc/lxd/shared/log15"
 	"github.com/lxc/lxd/shared/logger"
-	"github.com/farjump/go-libudev"
 )
 
 // USBEvent represents the properties of a USB device uevent.
