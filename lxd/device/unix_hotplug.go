@@ -3,6 +3,7 @@ package device
 import (
 	"fmt"
 	"strings"
+	"strconv"
 
 	"github.com/farjump/go-libudev"
 	deviceConfig "github.com/lxc/lxd/lxd/device/config"
