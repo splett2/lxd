@@ -73,8 +73,10 @@ func USBRunHandlers(state *state.State, event *USBEvent) {
 	    fmt.Println(device.Syspath())
 	    fmt.Println(device.Devpath())
 	    fmt.Println(device.Devnode())
-	    fmt.Println(device.SysattrValue("MAJOR"))
-	    fmt.Println(device.SysattrValue("MINOR"))
+	    fmt.Println(device.PropertyValue("MAJOR"))
+	    fmt.Println(device.PropertyValue("MINOR"))
+	    device.SysattrIterator()
+	    
 	}
 
 	u2 := udev.Udev{}
