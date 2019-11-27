@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/farjump/go-libudev"
 	deviceConfig "github.com/lxc/lxd/lxd/device/config"
 	"github.com/lxc/lxd/lxd/instance/instancetype"
 	"github.com/lxc/lxd/shared"
@@ -111,15 +112,69 @@ func (d *unixHotplug) Register() error {
 
 // Start is run when the device is added to the instance
 func (d *unixHotplug) Start() (*RunConfig, error) {
-
-	// TODO: logic to look up the device with uevent database
-
 	runConf := RunConfig{}
 	runConf.PostHooks = []func() error{d.Register}
 
-	if d.isRequired() && len(runConf.Mounts) <= 0 {
+	// Find device if exists
+	u := udev.Udev{}
+	e := u.NewEnumerate()
+
+	if d.config["vendorid"] != "" {
+		e.AddMatchProperty("ID_VENDOR_ID", d.config["vendorid"])
+	}
+	if d.config["productid"] != "" {
+		e.AddMatchProperty("ID_MODEL_ID", d.config["productid"])
+	}
+	// TODO what to do if no vendorid or product id? 
+	e.AddMatchIsInitialized()
+
+	devices, _ := e.Devices()
+	device := devices[0]
+	if device != nil {
+		fmt.Printf("Start: found dev with\n vendorid: %s\n, productid: %s\n, subsystem: %s\n, devnode: %s\n, major: %s\n, minor: %s\n", d.config["vendorid"], d.config["productid"], device.Subsystem(), device.Devnode(), device.PropertyValue("MAJOR"), device.PropertyValue("MINOR"))
+	}
+	if d.isRequired() && device == nil {
 		return nil, fmt.Errorf("Required Unix Hotplug device not found")
 	}
+	if device == nil {
+		// TODO what is the action we're supposed to take in this case? 
+		fmt.Printf("Device not found with vendorid: %s, productid: %s\n", d.config["vendorid"], d.config["productid"])
+		return &runConf, nil
+	}
+	if device.Subsystem() != "block" && device.Subsystem() != "char" {
+		if d.isRequired(){
+			return nil, fmt.Errorf("Required Unix Hotplug device not found, found device but has unsupported subsystem")
+		} else {
+			fmt.Printf("Device found has unsupported subsystem with vendorid: %s, productid: %s\n", d.config["vendorid"], d.config["productid"])
+			return &runConf, nil
+		}
+	}
+
+	i, err := strconv.ParseUint(device.PropertyValue("MAJOR"), 10, 32)
+	if err != nil {
+		return nil, err
+	}
+	major := uint32(i)
+	j, err := strconv.ParseUint(device.PropertyValue("MINOR"), 10, 32)
+	if err != nil {
+		return nil, err
+	}
+	minor := uint32(j)
+
+	// setup device
+	// TODO figure out if Devnode is the path that we want or not
+	if device.Subsystem() == "char" {
+		err = unixDeviceSetupCharNum(d.state, d.instance.DevicesPath(), "unix", d.name, d.config, major, minor, device.Devnode(), false, &runConf)
+	} else if device.Subsystem() == "block" {
+		err = unixDeviceSetupBlockNum(d.state, d.instance.DevicesPath(), "unix", d.name, d.config, major, minor, device.Devnode(), false, &runConf)
+	}
+	
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Printf("finished Start() for hotplug device\n")
+
 	return &runConf, nil
 }
 
