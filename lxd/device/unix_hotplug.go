@@ -151,16 +151,16 @@ func (d *unixHotplug) Start() (*RunConfig, error) {
 		}
 	}
 
-	major, err := strconv.ParseUint(device.SysattrValue("MAJOR"), 10, 32)
+	i, err := strconv.ParseUint(device.SysattrValue("MAJOR"), 10, 32)
 	if err != nil {
 		return nil, err
 	}
-	major = uint32(major)
-	minor, err := strconv.ParseUint(device.SysattrValue("MINOR"), 10, 32)
+	major := uint32(i)
+	i, err := strconv.ParseUint(device.SysattrValue("MINOR"), 10, 32)
 	if err != nil {
 		return nil, err
 	}
-	minor = uint32(minor)
+	minor := uint32(i)
 
 	// TODO now setup device
 	// TODO figure out if Devnode is the path that we want or not
