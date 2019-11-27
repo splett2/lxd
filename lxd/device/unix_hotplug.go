@@ -131,7 +131,7 @@ func (d *unixHotplug) Start() (*RunConfig, error) {
 	deviceFound := false
 
 	devices, _ := e.Devices()
-	device := devices[0]
+	var device udev.Device 
 	for i := range devices {
 	    device = devices[i]
 	    fmt.Println(device.Syspath())
