@@ -116,29 +116,7 @@ func (d *unixHotplug) Start() (*RunConfig, error) {
 	runConf := RunConfig{}
 	runConf.PostHooks = []func() error{d.Register}
 
-	// Find device if exists
-	u := udev.Udev{}
-	e := u.NewEnumerate()
-
-	if d.config["vendorid"] != "" {
-		e.AddMatchProperty("ID_VENDOR_ID", d.config["vendorid"])
-	}
-	if d.config["productid"] != "" {
-		e.AddMatchProperty("ID_MODEL_ID", d.config["productid"])
-	}
-	// TODO what to do if no vendorid or product id? 
-	e.AddMatchIsInitialized()
-	deviceFound := false
-
-	devices, _ := e.Devices()
-	var device *udev.Device 
-	for i := range devices {
-	    if device.Subsystem() == "block" || device.Subsystem() == "char" {
-	    	deviceFound = true
-	    	break
-	    }
-	    
-	}
+	deviceFound, device := loadUnixDevice(d)
 	if d.isRequired() && !deviceFound {
 		return nil, fmt.Errorf("Required Unix Hotplug device not found")
 	}
@@ -158,7 +136,6 @@ func (d *unixHotplug) Start() (*RunConfig, error) {
 	minor := uint32(j)
 
 	// setup device
-	// TODO figure out if Devnode is the path that we want or not
 	if device.Subsystem() == "char" {
 		err = unixDeviceSetupCharNum(d.state, d.instance.DevicesPath(), "unix", d.name, d.config, major, minor, device.Devnode(), false, &runConf)
 	} else if device.Subsystem() == "block" {
@@ -168,8 +145,6 @@ func (d *unixHotplug) Start() (*RunConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	fmt.Printf("finished Start() for hotplug device\n")
 
 	return &runConf, nil
 }
@@ -198,4 +173,33 @@ func (d *unixHotplug) postStop() error {
 	}
 
 	return nil
+}
+
+func (d *unixHotplug) loadUnixDevice (bool, *udev.Device) {
+	// Find device if exists
+	u := udev.Udev{}
+	e := u.NewEnumerate()
+
+	if d.config["vendorid"] != "" {
+		e.AddMatchProperty("ID_VENDOR_ID", d.config["vendorid"])
+	}
+	if d.config["productid"] != "" {
+		e.AddMatchProperty("ID_MODEL_ID", d.config["productid"])
+	}
+	// TODO what to do if no vendorid or product id? 
+	e.AddMatchIsInitialized()
+	deviceFound := false
+
+	devices, _ := e.Devices()
+	var device *udev.Device 
+	for i := range devices {
+		device = devices[i]
+	    if device.Subsystem() == "block" || device.Subsystem() == "char" {
+	    	deviceFound = true
+	    	return true, device
+	    }
+	    
+	}
+
+	return false, nil
 }
