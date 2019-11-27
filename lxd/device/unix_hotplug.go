@@ -78,10 +78,10 @@ func (d *unixHotplug) Register() error {
 		runConf := RunConfig{}
 
 		if e.Action == "add" {
-			// TODO: what if the device is a block device?
-			err := unixDeviceSetupCharNum(state, devicesPath, "unix", deviceName, deviceConfig, e.Major, e.Minor, e.Path, false, &runConf)
-			if err != nil {
-				return nil, err
+			if e.Subsystem == "char" {
+				err = unixDeviceSetupCharNum(state, devicesPath, "unix", deviceName, deviceConfig, e.Major, e.Minor, e.Path, false, &runConf)
+			} else {
+				err = unixDeviceSetupBlockNum(state, devicesPath, "unix", deviceName, deviceConfig, e.Major, e.Minor, e.Path, false, &runConf)
 			}
 		} else if e.Action == "remove" {
 			relativeTargetPath := strings.TrimPrefix(e.Path, "/")
@@ -175,6 +175,8 @@ func (d *unixHotplug) postStop() error {
 	return nil
 }
 
+// loadUnixDevice scans the host machine for unix devices with matching product/vendor ids
+// and returns the first matching device with the subsystem type char or block
 func (d *unixHotplug) loadUnixDevice() (bool, *udev.Device) {
 	// Find device if exists
 	u := udev.Udev{}
