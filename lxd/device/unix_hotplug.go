@@ -128,11 +128,29 @@ func (d *unixHotplug) Start() (*RunConfig, error) {
 	}
 	// TODO what to do if no vendorid or product id? 
 	e.AddMatchIsInitialized()
+	deviceFound := false
 
 	devices, _ := e.Devices()
-	device := devices[0]
-	if device != nil {
-		fmt.Printf("Start: found dev with\n vendorid: %s\n, productid: %s\n, subsystem: %s\n, devnode: %s\n, major: %s\n, minor: %s\n", d.config["vendorid"], d.config["productid"], device.Subsystem(), device.Devnode(), device.PropertyValue("MAJOR"), device.PropertyValue("MINOR"))
+	for i := range devices {
+	    device := devices[i]
+	    fmt.Println(device.Syspath())
+	    fmt.Println(device.Devpath())
+	    fmt.Println(device.Devnode())
+	    fmt.Println(device.PropertyValue("MAJOR"))
+	    fmt.Println(device.PropertyValue("MINOR"))
+	    device.SysattrIterator()
+
+	    if device.Subsystem() == "block" || device.Subsystem() == "char" {
+	    	deviceFound = true 
+	    	break
+	    }
+	    
+	}
+	device := devices[i]
+	if deviceFound {
+		fmt.Printf("Start: found dev with\n vendorid: %s\n productid: %s\n subsystem: %s\n devnode: %s\n major: %s\n minor: %s\n", d.config["vendorid"], d.config["productid"], device.Subsystem(), device.Devnode(), device.PropertyValue("MAJOR"), device.PropertyValue("MINOR"))
+	} else {
+		fmt.Printf("Device not found")
 	}
 	if d.isRequired() && device == nil {
 		return nil, fmt.Errorf("Required Unix Hotplug device not found")
@@ -142,15 +160,7 @@ func (d *unixHotplug) Start() (*RunConfig, error) {
 		fmt.Printf("Device not found with vendorid: %s, productid: %s\n", d.config["vendorid"], d.config["productid"])
 		return &runConf, nil
 	}
-	if device.Subsystem() != "block" && device.Subsystem() != "char" {
-		if d.isRequired(){
-			return nil, fmt.Errorf("Required Unix Hotplug device not found, found device but has unsupported subsystem")
-		} else {
-			fmt.Printf("Device found has unsupported subsystem with vendorid: %s, productid: %s\n", d.config["vendorid"], d.config["productid"])
-			return &runConf, nil
-		}
-	}
-
+	
 	i, err := strconv.ParseUint(device.PropertyValue("MAJOR"), 10, 32)
 	if err != nil {
 		return nil, err
