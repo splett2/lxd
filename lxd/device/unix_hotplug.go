@@ -133,31 +133,16 @@ func (d *unixHotplug) Start() (*RunConfig, error) {
 	devices, _ := e.Devices()
 	var device *udev.Device 
 	for i := range devices {
-	    device = devices[i]
-	    fmt.Println(device.Syspath())
-	    fmt.Println(device.Devpath())
-	    fmt.Println(device.Devnode())
-	    fmt.Println(device.PropertyValue("MAJOR"))
-	    fmt.Println(device.PropertyValue("MINOR"))
-	    device.SysattrIterator()
-
 	    if device.Subsystem() == "block" || device.Subsystem() == "char" {
 	    	deviceFound = true
 	    	break
 	    }
 	    
 	}
-	if deviceFound == true {
-		fmt.Printf("Start: found dev with\n vendorid: %s\n productid: %s\n subsystem: %s\n devnode: %s\n major: %s\n minor: %s\n", d.config["vendorid"], d.config["productid"], device.Subsystem(), device.Devnode(), device.PropertyValue("MAJOR"), device.PropertyValue("MINOR"))
-	} else {
-		fmt.Printf("Device not found")
-	}
 	if d.isRequired() && !deviceFound {
 		return nil, fmt.Errorf("Required Unix Hotplug device not found")
 	}
 	if !deviceFound {
-		// TODO what is the action we're supposed to take in this case? 
-		fmt.Printf("Device not found with vendorid: %s, productid: %s\n", d.config["vendorid"], d.config["productid"])
 		return &runConf, nil
 	}
 	
