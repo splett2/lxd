@@ -80,8 +80,14 @@ func (d *unixHotplug) Register() error {
 		if e.Action == "add" {
 			if e.Subsystem == "char" {
 				err = unixDeviceSetupCharNum(state, devicesPath, "unix", deviceName, deviceConfig, e.Major, e.Minor, e.Path, false, &runConf)
+				if err != nil {
+					return nil, err
+				}
 			} else {
 				err = unixDeviceSetupBlockNum(state, devicesPath, "unix", deviceName, deviceConfig, e.Major, e.Minor, e.Path, false, &runConf)
+				if err != nil {
+					return nil, err
+				}
 			}
 		} else if e.Action == "remove" {
 			relativeTargetPath := strings.TrimPrefix(e.Path, "/")
