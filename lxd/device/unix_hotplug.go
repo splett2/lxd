@@ -193,7 +193,6 @@ func (d *unixHotplug) loadUnixDevice() (bool, *udev.Device) {
 	for i := range devices {
 		device = devices[i]
 	    if device.Subsystem() == "block" || device.Subsystem() == "char" {
-	    	deviceFound = true
 	    	return true, device
 	    }
 	    
