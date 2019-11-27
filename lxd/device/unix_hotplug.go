@@ -188,8 +188,6 @@ func (d *unixHotplug) loadUnixDevice() (bool, *udev.Device) {
 	}
 	// TODO what to do if no vendorid or product id? 
 	e.AddMatchIsInitialized()
-	deviceFound := false
-
 	devices, _ := e.Devices()
 	var device *udev.Device 
 	for i := range devices {
