@@ -3,6 +3,7 @@ package device
 import (
 	"fmt"
 	"strings"
+	"strconv"
 
 	deviceConfig "github.com/lxc/lxd/lxd/device/config"
 	"github.com/lxc/lxd/lxd/instance/instancetype"
@@ -112,7 +113,6 @@ func (d *unixHotplug) Register() error {
 
 // Start is run when the device is added to the instance
 func (d *unixHotplug) Start() (*RunConfig, error) {
-	err
 	runConf := RunConfig{}
 	runConf.PostHooks = []func() error{d.Register}
 
@@ -151,12 +151,21 @@ func (d *unixHotplug) Start() (*RunConfig, error) {
 		}
 	}
 
+	major, err := strconv.ParseUint(device.SysattrValue("MAJOR"), 10, 32)
+	if err != nil {
+		return nil, err
+	}
+	minor, err := strconv.ParseUint(device.SysattrValue("MINOR"), 10, 32)
+	if err != nil {
+		return nil, err
+	}
+
 	// TODO now setup device
 	// TODO figure out if Devnode is the path that we want or not
 	if device.Subsystem() == "char" {
-		err := unixDeviceSetupCharNum(d.state, d.instance.DevicesPath(), "unix", d.name, d.config, device.SysattrValue("MAJOR"), device.SysattrValue("MINOR"), device.Devnode(), false, &runConf)
+		err := unixDeviceSetupCharNum(d.state, d.instance.DevicesPath(), "unix", d.name, d.config, major, minor, device.Devnode(), false, &runConf)
 	} else if device.Subsystem() == "block" {
-		err := unixDeviceSetupBlockNum(d.state, d.instance.DevicesPath(), "unix", d.name, d.config, device.SysattrValue("MAJOR"), device.SysattrValue("MINOR"), device.Devnode(), false, &runConf)
+		err := unixDeviceSetupBlockNum(d.state, d.instance.DevicesPath(), "unix", d.name, d.config, major, minor, device.Devnode(), false, &runConf)
 	}
 	
 	if err != nil {
