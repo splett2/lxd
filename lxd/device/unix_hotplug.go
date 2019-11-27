@@ -175,7 +175,7 @@ func (d *unixHotplug) postStop() error {
 	return nil
 }
 
-func (d *unixHotplug) loadUnixDevice (bool, *udev.Device) {
+func (d *unixHotplug) loadUnixDevice() (bool, *udev.Device) {
 	// Find device if exists
 	u := udev.Udev{}
 	e := u.NewEnumerate()
