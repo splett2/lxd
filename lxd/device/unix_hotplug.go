@@ -131,8 +131,9 @@ func (d *unixHotplug) Start() (*RunConfig, error) {
 	deviceFound := false
 
 	devices, _ := e.Devices()
+	device := devices[0]
 	for i := range devices {
-	    device := devices[i]
+	    device = devices[i]
 	    fmt.Println(device.Syspath())
 	    fmt.Println(device.Devpath())
 	    fmt.Println(device.Devnode())
@@ -141,12 +142,12 @@ func (d *unixHotplug) Start() (*RunConfig, error) {
 	    device.SysattrIterator()
 
 	    if device.Subsystem() == "block" || device.Subsystem() == "char" {
-	    	deviceFound = true 
+	    	deviceFound = true
 	    	break
 	    }
 	    
 	}
-	device := devices[i]
+	device := devices[]
 	if deviceFound {
 		fmt.Printf("Start: found dev with\n vendorid: %s\n productid: %s\n subsystem: %s\n devnode: %s\n major: %s\n minor: %s\n", d.config["vendorid"], d.config["productid"], device.Subsystem(), device.Devnode(), device.PropertyValue("MAJOR"), device.PropertyValue("MINOR"))
 	} else {
