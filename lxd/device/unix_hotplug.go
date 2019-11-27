@@ -2,14 +2,16 @@ package device
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
+	"github.com/farjump/go-libudev"
 	deviceConfig "github.com/lxc/lxd/lxd/device/config"
 	"github.com/lxc/lxd/lxd/instance/instancetype"
 	"github.com/lxc/lxd/shared"
 )
 
-// unixHotplugIsOurDevice indicates whether the USB device event qualifies as part of our device.
+// unixHotplugIsOurDevice indicates whether the unixHotplug device event qualifies as part of our device.
 // This function is not defined against the unixHotplug struct type so that it can be used in event
 // callbacks without needing to keep a reference to the unixHotplug device struct.
 func unixHotplugIsOurDevice(config deviceConfig.Device, unixHotplug *UnixHotplugEvent) bool {
@@ -76,10 +78,16 @@ func (d *unixHotplug) Register() error {
 		runConf := RunConfig{}
 
 		if e.Action == "add" {
-			// TODO: what if the device is a block device?
-			err := unixDeviceSetupCharNum(state, devicesPath, "unix", deviceName, deviceConfig, e.Major, e.Minor, e.Path, false, &runConf)
-			if err != nil {
-				return nil, err
+			if e.Subsystem == "char" {
+				err := unixDeviceSetupCharNum(state, devicesPath, "unix", deviceName, deviceConfig, e.Major, e.Minor, e.Path, false, &runConf)
+				if err != nil {
+					return nil, err
+				}
+			} else {
+				err := unixDeviceSetupBlockNum(state, devicesPath, "unix", deviceName, deviceConfig, e.Major, e.Minor, e.Path, false, &runConf)
+				if err != nil {
+					return nil, err
+				}
 			}
 		} else if e.Action == "remove" {
 			relativeTargetPath := strings.TrimPrefix(e.Path, "/")
@@ -88,7 +96,7 @@ func (d *unixHotplug) Register() error {
 				return nil, err
 			}
 
-			// Add a post hook function to remove the specific USB device file after unmount.
+			// Add a post hook function to remove the specific unix hotplug device file after unmount.
 			runConf.PostHooks = []func() error{func() error {
 				err := unixDeviceDeleteFiles(state, devicesPath, "unix", deviceName, relativeTargetPath)
 				if err != nil {
@@ -111,15 +119,39 @@ func (d *unixHotplug) Register() error {
 
 // Start is run when the device is added to the instance
 func (d *unixHotplug) Start() (*RunConfig, error) {
-
-	// TODO: logic to look up the device with uevent database
-
 	runConf := RunConfig{}
 	runConf.PostHooks = []func() error{d.Register}
 
-	if d.isRequired() && len(runConf.Mounts) <= 0 {
+	device := d.loadUnixDevice()
+	if d.isRequired() && device == nil {
 		return nil, fmt.Errorf("Required Unix Hotplug device not found")
 	}
+	if device == nil {
+		return &runConf, nil
+	}
+
+	i, err := strconv.ParseUint(device.PropertyValue("MAJOR"), 10, 32)
+	if err != nil {
+		return nil, err
+	}
+	major := uint32(i)
+	j, err := strconv.ParseUint(device.PropertyValue("MINOR"), 10, 32)
+	if err != nil {
+		return nil, err
+	}
+	minor := uint32(j)
+
+	// setup device
+	if device.Subsystem() == "char" {
+		err = unixDeviceSetupCharNum(d.state, d.instance.DevicesPath(), "unix", d.name, d.config, major, minor, device.Devnode(), false, &runConf)
+	} else if device.Subsystem() == "block" {
+		err = unixDeviceSetupBlockNum(d.state, d.instance.DevicesPath(), "unix", d.name, d.config, major, minor, device.Devnode(), false, &runConf)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
 	return &runConf, nil
 }
 
@@ -144,6 +176,32 @@ func (d *unixHotplug) postStop() error {
 	err := unixDeviceDeleteFiles(d.state, d.instance.DevicesPath(), "unix", d.name, "")
 	if err != nil {
 		return fmt.Errorf("Failed to delete files for device '%s': %v", d.name, err)
+	}
+
+	return nil
+}
+
+// loadUnixDevice scans the host machine for unix devices with matching product/vendor ids
+// and returns the first matching device with the subsystem type char or block
+func (d *unixHotplug) loadUnixDevice() *udev.Device {
+	// Find device if exists
+	u := udev.Udev{}
+	e := u.NewEnumerate()
+
+	if d.config["vendorid"] != "" {
+		e.AddMatchProperty("ID_VENDOR_ID", d.config["vendorid"])
+	}
+	if d.config["productid"] != "" {
+		e.AddMatchProperty("ID_MODEL_ID", d.config["productid"])
+	}
+	e.AddMatchIsInitialized()
+	devices, _ := e.Devices()
+	var device *udev.Device
+	for i := range devices {
+		device = devices[i]
+		if device.Subsystem() == "block" || device.Subsystem() == "char" {
+			return device
+		}
 	}
 
 	return nil
