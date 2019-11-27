@@ -112,7 +112,7 @@ func (d *unixHotplug) Register() error {
 
 // Start is run when the device is added to the instance
 func (d *unixHotplug) Start() (*RunConfig, error) {
-	err := nil
+	err
 	runConf := RunConfig{}
 	runConf.PostHooks = []func() error{d.Register}
 
@@ -129,7 +129,7 @@ func (d *unixHotplug) Start() (*RunConfig, error) {
 	e.AddMatchIsInitialized()
 
 	devices, _ := e.Devices()
-	device := devices.Front()
+	device := devices[0]
 	if device != nil {
 		fmt.Printf("found dev with\n vendorid: %s\n, productid: %s\n, subsystem: %s\n, devnode: %s\n, major: %s\n, minor: %s\n", d.config["vendorid"], d.config["productid"], device.Subsystem(), device.Devnode(), device.SysattrValue("MAJOR"), device.SysattrValue("MINOR"))
 	}
