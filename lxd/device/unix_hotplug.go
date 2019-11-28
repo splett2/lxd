@@ -123,7 +123,7 @@ func (d *unixHotplug) Start() (*RunConfig, error) {
 	runConf.PostHooks = []func() error{d.Register}
 
 	device := d.loadUnixDevice()
-	if d.isRequired() device == nil {
+	if d.isRequired() && device == nil {
 		return nil, fmt.Errorf("Required Unix Hotplug device not found")
 	}
 	if device == nil {
