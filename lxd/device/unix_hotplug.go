@@ -11,7 +11,7 @@ import (
 	"github.com/lxc/lxd/shared"
 )
 
-// unixHotplugIsOurDevice indicates whether the USB device event qualifies as part of our device.
+// unixHotplugIsOurDevice indicates whether the unixHotplug device event qualifies as part of our device.
 // This function is not defined against the unixHotplug struct type so that it can be used in event
 // callbacks without needing to keep a reference to the unixHotplug device struct.
 func unixHotplugIsOurDevice(config deviceConfig.Device, unixHotplug *UnixHotplugEvent) bool {
@@ -96,7 +96,7 @@ func (d *unixHotplug) Register() error {
 				return nil, err
 			}
 
-			// Add a post hook function to remove the specific USB device file after unmount.
+			// Add a post hook function to remove the specific unix hotplug device file after unmount.
 			runConf.PostHooks = []func() error{func() error {
 				err := unixDeviceDeleteFiles(state, devicesPath, "unix", deviceName, relativeTargetPath)
 				if err != nil {
@@ -122,11 +122,11 @@ func (d *unixHotplug) Start() (*RunConfig, error) {
 	runConf := RunConfig{}
 	runConf.PostHooks = []func() error{d.Register}
 
-	deviceFound, device := d.loadUnixDevice()
-	if d.isRequired() && !deviceFound {
+	device := d.loadUnixDevice()
+	if d.isRequired() device == nil {
 		return nil, fmt.Errorf("Required Unix Hotplug device not found")
 	}
-	if !deviceFound {
+	if device == nil {
 		return &runConf, nil
 	}
 	
@@ -183,7 +183,7 @@ func (d *unixHotplug) postStop() error {
 
 // loadUnixDevice scans the host machine for unix devices with matching product/vendor ids
 // and returns the first matching device with the subsystem type char or block
-func (d *unixHotplug) loadUnixDevice() (bool, *udev.Device) {
+func (d *unixHotplug) loadUnixDevice() (*udev.Device) {
 	// Find device if exists
 	u := udev.Udev{}
 	e := u.NewEnumerate()
@@ -194,17 +194,15 @@ func (d *unixHotplug) loadUnixDevice() (bool, *udev.Device) {
 	if d.config["productid"] != "" {
 		e.AddMatchProperty("ID_MODEL_ID", d.config["productid"])
 	}
-	// TODO what to do if no vendorid or product id? 
 	e.AddMatchIsInitialized()
 	devices, _ := e.Devices()
 	var device *udev.Device 
 	for i := range devices {
 		device = devices[i]
 	    if device.Subsystem() == "block" || device.Subsystem() == "char" {
-	    	return true, device
+	    	return device
 	    }
-	    
 	}
 
-	return false, nil
+	return nil
 }
