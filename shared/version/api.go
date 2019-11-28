@@ -177,6 +177,7 @@ var APIExtensions = []string{
 	"container_raw_mount",
 	"container_nic_routed",
 	"container_syscall_intercept_mount_fuse",
+	"unix_hotplug_devices",
 }
 
 // APIExtensionsCount returns the number of available API extensions.

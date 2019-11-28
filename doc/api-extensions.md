@@ -880,3 +880,6 @@ This introduces the `routed` "nic" device type.
 Adds the `security.syscalls.intercept.mount.fuse` key. It can be used to
 redirect filesystem mounts to their fuse implementation. To this end, set e.g.
 `security.syscalls.intercept.mount.fuse=ext4=fuse2fs`.
+
+## unix\_hotplug\_devices
+Adds support for unix char and block device hotplugging.
