@@ -2,8 +2,8 @@ package device
 
 import (
 	"fmt"
-	"strings"
 	"strconv"
+	"strings"
 
 	"github.com/farjump/go-libudev"
 	deviceConfig "github.com/lxc/lxd/lxd/device/config"
@@ -129,7 +129,7 @@ func (d *unixHotplug) Start() (*RunConfig, error) {
 	if device == nil {
 		return &runConf, nil
 	}
-	
+
 	i, err := strconv.ParseUint(device.PropertyValue("MAJOR"), 10, 32)
 	if err != nil {
 		return nil, err
@@ -147,7 +147,7 @@ func (d *unixHotplug) Start() (*RunConfig, error) {
 	} else if device.Subsystem() == "block" {
 		err = unixDeviceSetupBlockNum(d.state, d.instance.DevicesPath(), "unix", d.name, d.config, major, minor, device.Devnode(), false, &runConf)
 	}
-	
+
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +183,7 @@ func (d *unixHotplug) postStop() error {
 
 // loadUnixDevice scans the host machine for unix devices with matching product/vendor ids
 // and returns the first matching device with the subsystem type char or block
-func (d *unixHotplug) loadUnixDevice() (*udev.Device) {
+func (d *unixHotplug) loadUnixDevice() *udev.Device {
 	// Find device if exists
 	u := udev.Udev{}
 	e := u.NewEnumerate()
@@ -196,12 +196,12 @@ func (d *unixHotplug) loadUnixDevice() (*udev.Device) {
 	}
 	e.AddMatchIsInitialized()
 	devices, _ := e.Devices()
-	var device *udev.Device 
+	var device *udev.Device
 	for i := range devices {
 		device = devices[i]
-	    if device.Subsystem() == "block" || device.Subsystem() == "char" {
-	    	return device
-	    }
+		if device.Subsystem() == "block" || device.Subsystem() == "char" {
+			return device
+		}
 	}
 
 	return nil
