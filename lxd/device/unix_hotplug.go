@@ -129,34 +129,40 @@ func (d *unixHotplug) Start() (*deviceConfig.RunConfig, error) {
 	runConf := deviceConfig.RunConfig{}
 	runConf.PostHooks = []func() error{d.Register}
 
-	device := d.loadUnixDevice()
-	if d.isRequired() && device == nil {
-		return nil, fmt.Errorf("Required Unix Hotplug device not found")
-	}
-	if device == nil {
-		return &runConf, nil
-	}
+	devices := d.loadUnixDevice()
 
-	i, err := strconv.ParseUint(device.PropertyValue("MAJOR"), 10, 32)
-	if err != nil {
-		return nil, err
-	}
-	major := uint32(i)
-	j, err := strconv.ParseUint(device.PropertyValue("MINOR"), 10, 32)
-	if err != nil {
-		return nil, err
-	}
-	minor := uint32(j)
+	var device *udev.Device
+	for i := range devices {
+		device = devices[i]
 
-	// setup device
-	if device.Subsystem() == "block" {
-		err = unixDeviceSetupBlockNum(d.state, d.instance.DevicesPath(), "unix", d.name, d.config, major, minor, device.Devnode(), false, &runConf)
-	} else {
-		err = unixDeviceSetupCharNum(d.state, d.instance.DevicesPath(), "unix", d.name, d.config, major, minor, device.Devnode(), false, &runConf)
-	}
+		if d.isRequired() && device == nil {
+			return nil, fmt.Errorf("Required Unix Hotplug device not found")
+		}
+		if device == nil {
+			return &runConf, nil
+		}
 
-	if err != nil {
-		return nil, err
+		i, err := strconv.ParseUint(device.PropertyValue("MAJOR"), 10, 32)
+		if err != nil {
+			return nil, err
+		}
+		major := uint32(i)
+		j, err := strconv.ParseUint(device.PropertyValue("MINOR"), 10, 32)
+		if err != nil {
+			return nil, err
+		}
+		minor := uint32(j)
+
+		// setup device
+		if device.Subsystem() == "block" {
+			err = unixDeviceSetupBlockNum(d.state, d.instance.DevicesPath(), "unix", d.name, d.config, major, minor, device.Devnode(), false, &runConf)
+		} else {
+			err = unixDeviceSetupCharNum(d.state, d.instance.DevicesPath(), "unix", d.name, d.config, major, minor, device.Devnode(), false, &runConf)
+		}
+
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &runConf, nil
@@ -190,7 +196,7 @@ func (d *unixHotplug) postStop() error {
 
 // loadUnixDevice scans the host machine for unix devices with matching product/vendor ids
 // and returns the first matching device with the subsystem type char or block
-func (d *unixHotplug) loadUnixDevice() *udev.Device {
+func (d *unixHotplug) loadUnixDevice() []*Device {
 	// Find device if exists
 	u := udev.Udev{}
 	e := u.NewEnumerate()
@@ -201,15 +207,16 @@ func (d *unixHotplug) loadUnixDevice() *udev.Device {
 	if d.config["productid"] != "" {
 		e.AddMatchProperty("ID_MODEL_ID", d.config["productid"])
 	}
+	e.AddNomatchSubsystem("usb")
 	e.AddMatchIsInitialized()
 	devices, _ := e.Devices()
-	var device *udev.Device
-	for i := range devices {
-		device = devices[i]
-		if !strings.HasPrefix(device.Subsystem(), "usb") {
-			return device
-		}
-	}
+	//var device *udev.Device
+	//for i := range devices {
+	//	device = devices[i]
+	//	if !strings.HasPrefix(device.Subsystem(), "usb") {
+	//		return device
+	//	}
+	//}
 
-	return nil
+	return devices
 }
