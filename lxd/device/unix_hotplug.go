@@ -196,7 +196,7 @@ func (d *unixHotplug) postStop() error {
 
 // loadUnixDevice scans the host machine for unix devices with matching product/vendor ids
 // and returns the first matching device with the subsystem type char or block
-func (d *unixHotplug) loadUnixDevice() []*Device {
+func (d *unixHotplug) loadUnixDevice() []*udev.Device {
 	// Find device if exists
 	u := udev.Udev{}
 	e := u.NewEnumerate()
