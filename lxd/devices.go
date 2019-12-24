@@ -194,16 +194,20 @@ func deviceNetlinkListener() (chan []string, chan []string, chan device.USBEvent
 				if props["SUBSYSTEM"] == "usb" || (props["ACTION"] != "add" && props["ACTION"] != "remove"){
 					continue
 				}
+				fmt.Printf("pass 1: %s\n", props["SUBSYSTEM"])
 
 				subsystem, ok := props["SUBSYSTEM"]
 				if !ok {
 					continue
 				}
+				fmt.Printf("pass 2: %s\n", props["SUBSYSTEM"])
 
 				devname, ok := props["DEVNAME"]
 				if !ok {
 					continue
 				}
+
+				fmt.Printf("pass 3: %s\n", props["SUBSYSTEM"])
 				u := udev.Udev{}
 				e := u.NewEnumerate()
 
