@@ -209,11 +209,11 @@ func deviceNetlinkListener() (chan []string, chan []string, chan device.USBEvent
 				// e.AddNomatchSubsystem("usb")
 				e.AddMatchIsInitialized()
 				devices, _ := e.Devices()
-				var device *udev.Device
+				var ueventDevice *udev.Device
 				fmt.Printf("Printing devices\n")
 				for i := range devices {
-					device = devices[i]
-					fmt.Printf("device with devnode: %s, devname: %s, pID: %s, vID: %s\n", device.Devnode(), props["DEVNAME"], device.PropertyValue("ID_MODEL_ID"),device.PropertyValue("ID_VENDOR_ID"))
+					ueventDevice = devices[i]
+					fmt.Printf("device with devnode: %s, devname: %s, pID: %s, vID: %s\n", ueventDevice.Devnode(), props["DEVNAME"], ueventDevice.PropertyValue("ID_MODEL_ID"),ueventDevice.PropertyValue("ID_VENDOR_ID"))
 				}
 				fmt.Printf("Done printing devices\n")
 
