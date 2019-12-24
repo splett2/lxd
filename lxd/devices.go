@@ -190,7 +190,7 @@ func deviceNetlinkListener() (chan []string, chan []string, chan device.USBEvent
 			// unix hotplug device events rely on information added by udev
 			if udevEvent {
 				// filter below not needed but will help limit number of queries 
-				if props["ACTION"] != "add" && props["ACTION"] != "remove"{
+				if props["SUBSYSTEM"] == "usb" || (props["ACTION"] != "add" && props["ACTION"] != "remove"){
 					continue
 				}
 
@@ -211,14 +211,13 @@ func deviceNetlinkListener() (chan []string, chan []string, chan device.USBEvent
 				if props["ID_VENDOR_ID"] == "" && props["ID_MODEL_ID"] == ""{
 					e.AddMatchProperty("DEVNAME", props["DEVNAME"])
 				}
-				 e.AddNomatchSubsystem("usb")
 				e.AddMatchIsInitialized()
 				devices, _ := e.Devices()
 				var ueventDevice *udev.Device
 				fmt.Printf("Printing devices\n")
 				for i := range devices {
 					ueventDevice = devices[i]
-					fmt.Printf("device with devnode: %s, devname: %s, pID: %s, vID: %s\n", ueventDevice.Devnode(), props["DEVNAME"], ueventDevice.PropertyValue("ID_MODEL_ID"),ueventDevice.PropertyValue("ID_VENDOR_ID"))
+					fmt.Printf("device with subsystem: %s, devnode: %s, devname: %s, pID: %s, vID: %s\n", ueventDevice.Subsystem(), ueventDevice.Devnode(), props["DEVNAME"], ueventDevice.PropertyValue("ID_MODEL_ID"),ueventDevice.PropertyValue("ID_VENDOR_ID"))
 				}
 				fmt.Printf("Done printing devices\n")
 
