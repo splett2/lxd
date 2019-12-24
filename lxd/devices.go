@@ -8,7 +8,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-
+	
+	udev "github.com/farjump/go-libudev"
 	"golang.org/x/sys/unix"
 
 	"github.com/lxc/lxd/lxd/cgroup"
@@ -193,6 +194,29 @@ func deviceNetlinkListener() (chan []string, chan []string, chan device.USBEvent
 					continue
 				}
 
+				devname, ok := props["DEVNAME"]
+				if !ok {
+					continue
+				}
+
+				fmt.Printf("*** Udev event subsystem: %s\n", props["SUBSYSTEM"])
+				u := udev.Udev{}
+				e := u.NewEnumerate()
+
+				if props["ID_VENDOR_ID"] == "" && props["ID_MODEL_ID"] == ""{
+					e.AddMatchProperty("DEVNAME", props["DEVNAME"])
+				}
+				// e.AddNomatchSubsystem("usb")
+				e.AddMatchIsInitialized()
+				devices, _ := e.Devices()
+				fmt.Printf("Printing devices\n")
+				for i := range devices {
+					device = devices[i]
+					fmt.Printf("device with devnode: %s, devname: %s, pID: %s, vID: %s\n", device.Devnode(), props["DEVNAME"], device.PropertyValue("ID_MODEL_ID"),device.PropertyValue("ID_VENDOR_ID"))
+				}
+				fmt.Printf("Done printing devices\n")
+
+
 				vendor, ok := props["ID_VENDOR_ID"]
 				if !ok {
 					continue
@@ -209,11 +233,6 @@ func deviceNetlinkListener() (chan []string, chan []string, chan device.USBEvent
 				}
 
 				minor, ok := props["MINOR"]
-				if !ok {
-					continue
-				}
-
-				devname, ok := props["DEVNAME"]
 				if !ok {
 					continue
 				}
