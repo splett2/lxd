@@ -190,6 +190,7 @@ func deviceNetlinkListener() (chan []string, chan []string, chan device.USBEvent
 			// unix hotplug device events rely on information added by udev
 			if udevEvent {
 				// filter below not needed but will help limit number of queries 
+				fmt.Printf("*** Udev event subsystem: %s\n", props["SUBSYSTEM"])
 				if props["SUBSYSTEM"] == "usb" || (props["ACTION"] != "add" && props["ACTION"] != "remove"){
 					continue
 				}
@@ -203,14 +204,12 @@ func deviceNetlinkListener() (chan []string, chan []string, chan device.USBEvent
 				if !ok {
 					continue
 				}
-
-				fmt.Printf("*** Udev event subsystem: %s\n", props["SUBSYSTEM"])
 				u := udev.Udev{}
 				e := u.NewEnumerate()
 
-				if props["ID_VENDOR_ID"] == "" && props["ID_MODEL_ID"] == ""{
-					e.AddMatchProperty("DEVNAME", props["DEVNAME"])
-				}
+				//if props["ID_VENDOR_ID"] == "" && props["ID_MODEL_ID"] == ""{
+				e.AddMatchProperty("DEVNAME", props["DEVNAME"])
+				//}
 				e.AddMatchIsInitialized()
 				devices, _ := e.Devices()
 				var ueventDevice *udev.Device
