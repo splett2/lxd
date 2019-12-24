@@ -211,7 +211,7 @@ func deviceNetlinkListener() (chan []string, chan []string, chan device.USBEvent
 				if props["ID_VENDOR_ID"] == "" && props["ID_MODEL_ID"] == ""{
 					e.AddMatchProperty("DEVNAME", props["DEVNAME"])
 				}
-				// e.AddNomatchSubsystem("usb")
+				 e.AddNomatchSubsystem("usb")
 				e.AddMatchIsInitialized()
 				devices, _ := e.Devices()
 				var ueventDevice *udev.Device
