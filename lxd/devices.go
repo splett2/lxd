@@ -190,8 +190,9 @@ func deviceNetlinkListener() (chan []string, chan []string, chan device.USBEvent
 			// unix hotplug device events rely on information added by udev
 			if udevEvent {
 				// filter below not needed but will help limit number of queries 
-				if props["ACTION"] != "add" && props["ACTION"] != "remove"
+				if props["ACTION"] != "add" && props["ACTION"] != "remove"{
 					continue
+				}
 
 				subsystem, ok := props["SUBSYSTEM"]
 				if !ok {
