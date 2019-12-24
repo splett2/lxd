@@ -209,6 +209,7 @@ func deviceNetlinkListener() (chan []string, chan []string, chan device.USBEvent
 				// e.AddNomatchSubsystem("usb")
 				e.AddMatchIsInitialized()
 				devices, _ := e.Devices()
+				var device *udev.Device
 				fmt.Printf("Printing devices\n")
 				for i := range devices {
 					device = devices[i]
