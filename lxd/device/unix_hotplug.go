@@ -138,6 +138,10 @@ func (d *unixHotplug) Start() (*deviceConfig.RunConfig, error) {
 
 		fmt.Printf("Start(): device with subsystem: %s, devnode: %s, pID: %s, vID: %s\n", device.Subsystem(), device.Devnode(), device.PropertyValue("ID_MODEL_ID"),device.PropertyValue("ID_VENDOR_ID"))
 
+		if device.Devnode() == "" {
+			continue 
+		}
+
 		i, err := strconv.ParseUint(device.PropertyValue("MAJOR"), 10, 32)
 		if err != nil {
 			return nil, err
