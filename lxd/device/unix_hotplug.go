@@ -132,15 +132,11 @@ func (d *unixHotplug) Start() (*deviceConfig.RunConfig, error) {
 	devices := d.loadUnixDevice()
 
 	var device *udev.Device
+	bool deviceFound := false 
 	for i := range devices {
 		device = devices[i]
 
-		if d.isRequired() && device == nil {
-			return nil, fmt.Errorf("Required Unix Hotplug device not found")
-		}
-		if device == nil {
-			return &runConf, nil
-		}
+		fmt.Printf("Start(): device with subsystem: %s, devnode: %s, devname: %s, pID: %s, vID: %s\n", ueventDevice.Subsystem(), ueventDevice.Devnode(), props["DEVNAME"], ueventDevice.PropertyValue("ID_MODEL_ID"),ueventDevice.PropertyValue("ID_VENDOR_ID"))
 
 		i, err := strconv.ParseUint(device.PropertyValue("MAJOR"), 10, 32)
 		if err != nil {
@@ -163,6 +159,16 @@ func (d *unixHotplug) Start() (*deviceConfig.RunConfig, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		deviceFound = true 
+	}
+
+	if d.isRequired() && !deviceFound {
+		return nil, fmt.Errorf("Required Unix Hotplug device not found")
+	}
+	if !deviceFound == nil {
+		fmt.Printf("no device found in Start()\n")
+		return &runConf, nil
 	}
 
 	return &runConf, nil
@@ -210,13 +216,6 @@ func (d *unixHotplug) loadUnixDevice() []*udev.Device {
 	e.AddNomatchSubsystem("usb")
 	e.AddMatchIsInitialized()
 	devices, _ := e.Devices()
-	//var device *udev.Device
-	//for i := range devices {
-	//	device = devices[i]
-	//	if !strings.HasPrefix(device.Subsystem(), "usb") {
-	//		return device
-	//	}
-	//}
 
 	return devices
 }
