@@ -191,7 +191,7 @@ func deviceNetlinkListener() (chan []string, chan []string, chan device.USBEvent
 			if udevEvent {
 				// filter below not needed but will help limit number of queries 
 				fmt.Printf("*** Udev event subsystem: %s\n", props["SUBSYSTEM"])
-				if props["SUBSYSTEM"] == "usb"{ //|| (props["ACTION"] != "add" && props["ACTION"] != "remove"){
+				if props["SUBSYSTEM"] == "usb" || props["SUBSYSTEM"] == "cgroup" { //|| (props["ACTION"] != "add" && props["ACTION"] != "remove"){
 					continue
 				}
 				fmt.Printf("pass 1: %s\n", props["SUBSYSTEM"])
