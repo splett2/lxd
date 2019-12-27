@@ -132,7 +132,7 @@ func (d *unixHotplug) Start() (*deviceConfig.RunConfig, error) {
 	devices := d.loadUnixDevice()
 
 	var device *udev.Device
-	bool deviceFound := false 
+	deviceFound := false 
 	for i := range devices {
 		device = devices[i]
 
