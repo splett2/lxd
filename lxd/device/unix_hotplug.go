@@ -136,7 +136,7 @@ func (d *unixHotplug) Start() (*deviceConfig.RunConfig, error) {
 	for i := range devices {
 		device = devices[i]
 
-		fmt.Printf("Start(): device with subsystem: %s, devnode: %s, pID: %s, vID: %s\n", device.Subsystem(), device.Devnode(), ueventDevice.PropertyValue("ID_MODEL_ID"),ueventDevice.PropertyValue("ID_VENDOR_ID"))
+		fmt.Printf("Start(): device with subsystem: %s, devnode: %s, pID: %s, vID: %s\n", device.Subsystem(), device.Devnode(), device.PropertyValue("ID_MODEL_ID"),device.PropertyValue("ID_VENDOR_ID"))
 
 		i, err := strconv.ParseUint(device.PropertyValue("MAJOR"), 10, 32)
 		if err != nil {
